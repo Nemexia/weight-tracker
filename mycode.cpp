@@ -10,8 +10,13 @@
 using namespace std;
 
 struct Record{
+    string timestamp{};
     int date{};
     double value{};
+    double change{};
+    double weekly_rate{};
+    double ema_7{};
+    double ema_30{};
 };
 
 using RV = vector<Record>;
@@ -34,6 +39,17 @@ string get_current_date() {
     return oss.str();
 }
 
+double get_ema(const int N, const double prev, const double now ,const int interval, double ema)
+{
+    double factor{2.0/(1.0+N)};
+    for(int i{1}; i<interval+1; ++i)
+    {
+        double val{((now-prev)/interval*i)+prev};
+        ema = val * factor + ema * (1-factor);
+    }
+    return ema;
+}
+
 RV read_file(const string &filename)
 {
     RV records;
@@ -46,19 +62,27 @@ RV read_file(const string &filename)
     while(getline(file, line))
     {
         stringstream ss(line);
-        string date{};
+        string timestamp{};
         string value{};
-        getline(ss, date, ',');
+        getline(ss, timestamp, ',');
         getline(ss, value, ',');
-        Record record{timestamp_to_date(date), stod(value)};
+        Record record{timestamp, timestamp_to_date(timestamp), stod(value)};
         records.push_back(record);
     }
     
+    int initial_date{records[0].date};
+    records[0].date = 0;
+    records[0].ema_7 = records[0].value;
+    records[0].ema_30 = records[0].value;
     for(int i{1}; i<records.size();++i)
     {
-        records[i].date -= records[0].date;
+        records[i].date -= initial_date;
+        records[i].change = records[i].value - records[i-1].value;
+        const int interval{records[i].date-records[i-1].date};
+        records[i].weekly_rate = records[i].change / interval * 7;
+        records[i].ema_7 = get_ema(7, records[i-1].value, records[i].value, interval, records[i-1].ema_7);
+        records[i].ema_30 = get_ema(30, records[i-1].value, records[i].value, interval, records[i-1].ema_30);
     }
-    records[0].date=0;
     return records;
 }
 
@@ -86,6 +110,12 @@ void print_records(const string& filename)
     {
         cout << "No records found!\n";
         return;
+    }
+    
+    cout<<"timestamp\tdate\tvalue\tchange\trate_7\tema_7\tema_30\n";
+    for(auto r: records)
+    {
+        cout<<r.timestamp<<"\t"<<r.date<<fixed<<setprecision(2)<<"\t"<<r.value<<"\t"<<r.change<<"\t"<<r.weekly_rate<<"\t"<<r.ema_7<<"\t"<<r.ema_30<<endl;
     }
     
 }
@@ -125,6 +155,5 @@ int main()
         }
     }
 }
-
 
 
