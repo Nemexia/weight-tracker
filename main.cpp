@@ -31,9 +31,10 @@ int timestamp_to_date(const string &timestamp) {
 
 string get_current_date() {
   time_t now = time(nullptr);
-  tm *local = localtime(&now);
+  tm local;
+  localtime_s(&local, &now);
   ostringstream oss;
-  oss << put_time(local, "%Y-%m-%d");
+  oss << put_time(&local, "%Y-%m-%d");
   return oss.str();
 }
 
