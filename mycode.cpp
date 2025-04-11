@@ -73,14 +73,16 @@ RV read_file(const string &filename) {
   records[0].ema_7 = records[0].value;
   records[0].ema_30 = records[0].value;
   for (std::vector<Record>::size_type i{1}; i < records.size(); ++i) {
-    records[i].date -= initial_date;
-    records[i].change = records[i].value - records[i - 1].value;
-    const int interval{records[i].date - records[i - 1].date};
-    records[i].weekly_rate = records[i].change / interval * 7;
-    records[i].ema_7 = get_ema(7, records[i - 1].value, records[i].value,
-                               interval, records[i - 1].ema_7);
-    records[i].ema_30 = get_ema(30, records[i - 1].value, records[i].value,
-                                interval, records[i - 1].ema_30);
+    Record &r{records[i]};
+    Record &prev{records[i - 1]};
+    r.date -= initial_date;
+    r.change = r.value - prev.value;
+    const int interval{r.date - prev.date};
+    r.weekly_rate = r.change / interval * 7;
+    r.ema_7 = get_ema(7, prev.value, r.value,
+                               interval, prev.ema_7);
+    r.ema_30 = get_ema(30, prev.value, r.value,
+                                interval, prev.ema_30);
   }
   return records;
 }
