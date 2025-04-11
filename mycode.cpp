@@ -104,12 +104,15 @@ void print_records(const string &filename) {
     return;
   }
 
+  cout << "Records:\n";
+  cout << "--------------------------------------------------------\n";
   cout << "timestamp\tdate\tvalue\tchange\trate_7\tema_7\tema_30\n";
   for (auto r : records) {
     cout << r.timestamp << "\t" << r.date << fixed << setprecision(2) << "\t"
          << r.value << "\t" << r.change << "\t" << r.weekly_rate << "\t"
          << r.ema_7 << "\t" << r.ema_30 << endl;
   }
+  cout << "--------------------------------------------------------\n";
 }
 
 int main() {
