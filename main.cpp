@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-
 using namespace std;
 
 struct Record {
@@ -79,10 +78,8 @@ RV read_file(const string &filename) {
     r.change = r.value - prev.value;
     const int interval{r.date - prev.date};
     r.weekly_rate = r.change / interval * 7;
-    r.ema_7 = get_ema(7, prev.value, r.value,
-                               interval, prev.ema_7);
-    r.ema_30 = get_ema(30, prev.value, r.value,
-                                interval, prev.ema_30);
+    r.ema_7 = get_ema(7, prev.value, r.value, interval, prev.ema_7);
+    r.ema_30 = get_ema(30, prev.value, r.value, interval, prev.ema_30);
   }
   return records;
 }
