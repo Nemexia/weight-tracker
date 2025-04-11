@@ -67,10 +67,11 @@ RV read_file(const string &filename) {
     records.push_back(record);
   }
 
-  int initial_date{records[0].date};
-  records[0].date = 0;
-  records[0].ema_7 = records[0].value;
-  records[0].ema_30 = records[0].value;
+  Record &r0{records[0]};
+  int initial_date{r0.date};
+  r0.date = 0;
+  r0.ema_7 = r0.value;
+  r0.ema_30 = r0.value;
   for (std::vector<Record>::size_type i{1}; i < records.size(); ++i) {
     Record &r{records[i]};
     Record &prev{records[i - 1]};
