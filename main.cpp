@@ -5,6 +5,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "plotter.h"
 
 using namespace std;
 
@@ -115,12 +116,25 @@ void print_records(const string &filename) {
   cout << "--------------------------------------------------------\n";
 }
 
+void plot_records(const string &filename)
+{
+Plot plot(50, 20);
+      std::vector<std::pair<double, double>> data{};
+      RV records{read_file(filename)};
+      for (const auto &record : records) {
+        data.emplace_back(record.date, record.value);
+      }
+      plot.set_data(&data);
+      plot.draw();
+}
+
 int main() {
   const string filename{"data.csv"};
   while (true) {
     cout << "\nWeight Tracker Menu:\n";
     cout << "1. Record new weight\n";
     cout << "2. Show all records\n";
+    cout << "3. Plot data\n";
     cout << "0. Exit\n";
     cout << "Enter your choice: ";
     int choice{};
@@ -136,6 +150,10 @@ int main() {
 
     case 2:
       print_records(filename);
+      break;
+    
+    case 3:
+      plot_records(filename);
       break;
 
     case 0:
