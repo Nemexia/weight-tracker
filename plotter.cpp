@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #pragma pack(push, 1)  // Exact byte alignment
-
 struct BMPFileHeader {
     uint16_t bfType = 0x4D42;     // 'BM'
     uint32_t bfSize;              // Size of file in bytes
@@ -11,7 +10,6 @@ struct BMPFileHeader {
     uint16_t bfReserved2 = 0;
     uint32_t bfOffBits = 54;      // Pixel data offset
 };
-
 struct BMPInfoHeader {
     uint32_t biSize = 40;         // Header size
     int32_t biWidth;
@@ -25,8 +23,26 @@ struct BMPInfoHeader {
     uint32_t biClrUsed = 0;
     uint32_t biClrImportant = 0;
 };
-
 #pragma pack(pop)
+
+using Graph = std::array<std::array<unsigned char, width>, height>;
+
+void plot(Graph graph)
+{
+    constexpr int width{800};
+    constexpr int height{600};
+    // Each row padded to multiple of 4
+    constexpr int rowSize{(width * 3 + 3) & ~3};
+    constexpr int dataSize{rowSize * height};
+
+    BMPFileHeader fileHeader;
+    fileHeader.bfSize = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader) + dataSize;
+
+    BMPInfoHeader infoHeader;
+    infoHeader.biWidth = width;
+    infoHeader.biHeight = height;
+    infoHeader.biSizeImage = dataSize;
+}
 
 int main() {
     const int width = 256;
