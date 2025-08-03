@@ -27,7 +27,8 @@ struct BMPInfoHeader {
 
 constexpr int width{800};
 constexpr int height{600};
-using Graph = std::array<std::array<unsigned char, width>, height>;
+using Pixel = std::array<unsigned char, 3>;
+using Graph = std::array<std::array<Pixel, width>, height>;
 
 void plot(Graph graph)
 {
@@ -43,7 +44,7 @@ void plot(Graph graph)
     infoHeader.biHeight = height;
     infoHeader.biSizeImage = dataSize;
 
-    std::ofstream out("raw_bmp_image.bmp", std::ios::binary);
+    std::ofstream out("graph.bmp", std::ios::binary);
     if (!out) {
         std::cerr << "Failed to open file\n";
         return;
@@ -53,12 +54,10 @@ void plot(Graph graph)
     out.write(reinterpret_cast<char*>(&infoHeader), sizeof(infoHeader));
 
     // Pixel data (bottom-up)
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            unsigned char pixel[3] = { 0, 0, 255 }; // BGR = Red
-            out.write(reinterpret_cast<char*>(pixel), 3);
+    for (auto const &row: graph) {
+        for (auto const &pixel: row) {
+            out.write(reinterpret_cast<const char*>(pixel.data()), 3);
         }
-
         // Padding
         int padding = rowSize - width * 3;
         unsigned char pad[3] = { 0, 0, 0 };
@@ -70,7 +69,7 @@ void plot(Graph graph)
 }
 
 int main() {
-    Graph gg;
+    Graph gg{};
     plot(gg);
     return 0;
 }
