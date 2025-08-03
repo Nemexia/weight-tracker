@@ -25,31 +25,15 @@ struct BMPInfoHeader {
 };
 #pragma pack(pop)
 
+constexpr int width{800};
+constexpr int height{600};
 using Graph = std::array<std::array<unsigned char, width>, height>;
 
 void plot(Graph graph)
 {
-    constexpr int width{800};
-    constexpr int height{600};
     // Each row padded to multiple of 4
     constexpr int rowSize{(width * 3 + 3) & ~3};
     constexpr int dataSize{rowSize * height};
-
-    BMPFileHeader fileHeader;
-    fileHeader.bfSize = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader) + dataSize;
-
-    BMPInfoHeader infoHeader;
-    infoHeader.biWidth = width;
-    infoHeader.biHeight = height;
-    infoHeader.biSizeImage = dataSize;
-}
-
-int main() {
-    const int width = 256;
-    const int height = 256;
-
-    int rowSize = (width * 3 + 3) & ~3;  // Each row padded to multiple of 4
-    int dataSize = rowSize * height;
 
     BMPFileHeader fileHeader;
     fileHeader.bfSize = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader) + dataSize;
@@ -62,7 +46,7 @@ int main() {
     std::ofstream out("raw_bmp_image.bmp", std::ios::binary);
     if (!out) {
         std::cerr << "Failed to open file\n";
-        return 1;
+        return;
     }
 
     out.write(reinterpret_cast<char*>(&fileHeader), sizeof(fileHeader));
@@ -83,5 +67,10 @@ int main() {
 
     out.close();
     std::cout << "BMP image created as raw_bmp_image.bmp\n";
+}
+
+int main() {
+    Graph gg;
+    plot(gg);
     return 0;
 }
