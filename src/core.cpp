@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "plotter.hpp"
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -132,4 +133,21 @@ void print_records(const std::string &filename) {
   }
   std::cout
       << "--------------------------------------------------------------\n\n";
+}
+
+void plot_records(const std::string &filename) {
+  RV records{read_file(filename)};
+
+  if (records.empty()) {
+    std::cout << "No records found!\n";
+    return;
+  }
+
+  std::vector<double> data{};
+  for (auto const &r : records) {
+    data.push_back(r.value);
+  }
+  Graph graph{};
+  graph.add_graph(data);
+  graph.plot();
 }

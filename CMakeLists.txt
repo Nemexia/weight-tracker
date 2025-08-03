@@ -20,5 +20,9 @@ else()
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+add_library(plotter STATIC src/plotter.cpp include/plotter.hpp)
+target_include_directories(plotter PUBLIC include)
+
 add_executable(main src/main.cpp src/core.cpp include/core.hpp)
 target_include_directories(main PRIVATE include)
+target_link_libraries(main plotter)

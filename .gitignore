@@ -33,5 +33,9 @@
 
 # VSCode files
 .vscode
+
 build
 bin
+
+graph.bmp
+.cache
