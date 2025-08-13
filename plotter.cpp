@@ -37,7 +37,7 @@ void Graph::plot() const {
   using Pixel = std::array<unsigned char, 3>;
   using Plot = std::array<std::array<Pixel, height>, width>;
 
-  Plot graph_to_plot;
+  Plot graph_to_plot{};
 
   for (auto const &graph : graphs) {
     const double min{*std::min_element(graph.begin(), graph.end())};
@@ -46,7 +46,8 @@ void Graph::plot() const {
     for (auto i{0}; i < graph.size(); ++i) {
       const int value{
           static_cast<int>((graph[i] - min) / (max - min) * (height - 1))};
-      graph_to_plot[i][value] = Pixel{0, 0, 240};
+      const int y {height-1-value};
+      graph_to_plot[i][y] = Pixel{0, 0, 240};
     }
   }
 
@@ -72,9 +73,9 @@ void Graph::plot() const {
   out.write(reinterpret_cast<char *>(&infoHeader), sizeof(infoHeader));
 
   // Pixel data (bottom-up)
-  for (auto const &row : graph_to_plot) {
-    for (auto const &pixel : row) {
-      out.write(reinterpret_cast<const char *>(pixel.data()), 3);
+  for (int y{}; y<height;++y) {
+    for (int x{}; x<width; ++x) {
+      out.write(reinterpret_cast<const char *>(graph_to_plot[x][y].data()), 3);
     }
     // Padding
     int padding = rowSize - width * 3;
