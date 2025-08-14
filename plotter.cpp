@@ -84,7 +84,7 @@ void Graph::plot() const {
   }
 
   out.close();
-  std::cout << "BMP image created as raw_bmp_image.bmp\n";
+  std::cout << "BMP image created as graph.bmp\n";
 }
 
 int main() {
