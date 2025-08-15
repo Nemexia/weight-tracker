@@ -89,15 +89,3 @@ void Graph::plot() const {
 
   write_bmp(graph_to_plot);
 }
-
-int main() {
-  Graph g;
-  std::vector<double> data;
-  data.reserve(400);
-  for (auto i{0}; i < 400; ++i) {
-    data.push_back(static_cast<double>(i));
-  }
-  g.add_graph(data);
-  g.plot();
-  return 0;
-}
