@@ -29,32 +29,15 @@ struct BMPInfoHeader {
 };
 #pragma pack(pop)
 
-void Graph::add_graph(std::vector<double> graph) { graphs.push_back(graph); }
+constexpr int width{800};
+constexpr int height{600};
+// Each row padded to multiple of 4
+constexpr int rowSize{(width * 3 + 3) & ~3};
+constexpr int dataSize{rowSize * height};
+using Pixel = std::array<unsigned char, 3>;
+using Plot = std::array<std::array<Pixel, height>, width>;
 
-void Graph::plot() const {
-  constexpr int width{800};
-  constexpr int height{600};
-  using Pixel = std::array<unsigned char, 3>;
-  using Plot = std::array<std::array<Pixel, height>, width>;
-
-  Plot graph_to_plot{};
-
-  for (auto const &graph : graphs) {
-    const double min{*std::min_element(graph.begin(), graph.end())};
-    const double max{*std::max_element(graph.begin(), graph.end())};
-
-    for (auto i{0}; i < graph.size(); ++i) {
-      const int value{
-          static_cast<int>((graph[i] - min) / (max - min) * (height - 1))};
-      const int y {height-1-value};
-      graph_to_plot[i][y] = Pixel{0, 0, 240};
-    }
-  }
-
-  // Each row padded to multiple of 4
-  constexpr int rowSize{(width * 3 + 3) & ~3};
-  constexpr int dataSize{rowSize * height};
-
+static void write_bmp(const Plot &graph_to_plot) {
   BMPFileHeader fileHeader;
   fileHeader.bfSize = sizeof(BMPFileHeader) + sizeof(BMPInfoHeader) + dataSize;
 
@@ -73,8 +56,8 @@ void Graph::plot() const {
   out.write(reinterpret_cast<char *>(&infoHeader), sizeof(infoHeader));
 
   // Pixel data (bottom-up)
-  for (int y{}; y<height;++y) {
-    for (int x{}; x<width; ++x) {
+  for (int y{}; y < height; ++y) {
+    for (int x{}; x < width; ++x) {
       out.write(reinterpret_cast<const char *>(graph_to_plot[x][y].data()), 3);
     }
     // Padding
@@ -85,6 +68,27 @@ void Graph::plot() const {
 
   out.close();
   std::cout << "BMP image created as graph.bmp\n";
+}
+
+void Graph::add_graph(std::vector<double> graph) { graphs.push_back(graph); }
+
+void Graph::plot() const {
+
+  Plot graph_to_plot{};
+
+  for (auto const &graph : graphs) {
+    const double min{*std::min_element(graph.begin(), graph.end())};
+    const double max{*std::max_element(graph.begin(), graph.end())};
+
+    for (std::vector<double>::size_type i{0}; i < graph.size(); ++i) {
+      const int value{
+          static_cast<int>((graph[i] - min) / (max - min) * (height - 1))};
+      const int y{height - 1 - value};
+      graph_to_plot[i][y] = Pixel{0, 0, 240};
+    }
+  }
+
+  write_bmp(graph_to_plot);
 }
 
 int main() {
