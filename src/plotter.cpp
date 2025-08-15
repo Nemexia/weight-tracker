@@ -83,8 +83,7 @@ void Graph::plot() const {
     for (std::vector<double>::size_type i{0}; i < graph.size(); ++i) {
       const int value{
           static_cast<int>((graph[i] - min) / (max - min) * (height - 1))};
-      const int y{height - 1 - value};
-      graph_to_plot[i][y] = Pixel{0, 0, 240};
+      graph_to_plot[i][value] = Pixel{0, 0, 240};
     }
   }
 
@@ -94,8 +93,8 @@ void Graph::plot() const {
 int main() {
   Graph g;
   std::vector<double> data;
-  data.reserve(100);
-  for (auto i{0}; i < 100; ++i) {
+  data.reserve(400);
+  for (auto i{0}; i < 400; ++i) {
     data.push_back(static_cast<double>(i));
   }
   g.add_graph(data);
