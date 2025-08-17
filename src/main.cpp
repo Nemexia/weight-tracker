@@ -9,6 +9,7 @@ int main() {
     std::cout << "Weight Tracker Menu:\n";
     std::cout << "1. Record new weight\n";
     std::cout << "2. Show all records\n";
+    std::cout << "3. Plot records\n";
     std::cout << "0. Exit\n";
     std::cout << "Enter your choice: ";
     int choice;
@@ -24,6 +25,9 @@ int main() {
       record_new_weight(filename);
     case 2:
       print_records(filename);
+      break;
+    case 3:
+      plot_records(filename);
       break;
     case 0:
       std::cout << "Goodbye!\n";
