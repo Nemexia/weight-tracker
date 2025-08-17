@@ -10,7 +10,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 project(
   weight-tracker
-  VERSION 0.3.0
+  VERSION 0.4.0
   DESCRIPTION "Tracks my weight"
   LANGUAGES CXX)
 
