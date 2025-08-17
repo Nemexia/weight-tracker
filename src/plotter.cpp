@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 constexpr int width{800};
