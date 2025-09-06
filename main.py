@@ -1,114 +1,138 @@
-import pandas as pd
+import os
 from datetime import datetime
+import pandas as pd
 import matplotlib.pyplot as plt
 
+# ----------------- CONFIG -----------------
 FILE_PATH = "data.csv"
+PLOT_PATH = "plot.png"
 
-def read_data():
-    # Read original CSV
-    df_original = pd.read_csv(FILE_PATH)
-    df_original['Date'] = pd.to_datetime(df_original['Date'])
 
-    # Set 'Date' as index for interpolation
-    df = df_original.set_index('Date')
+# ----------------- DATA HANDLING -----------------
+def load_data():
+    """Load weight data from CSV. Returns empty DataFrame if file doesn't exist."""
+    if not os.path.exists(FILE_PATH):
+        return pd.DataFrame(columns=["Date", "Weight"])
 
-    # Reindex to include all days between first and last date
-    all_days = pd.date_range(start=df.index.min(), end=df.index.max())
+    df = pd.read_csv(FILE_PATH)
+    df["Date"] = pd.to_datetime(df["Date"])
+    return df
+
+
+def preprocess_data():
+    """
+    Load, interpolate, and calculate required columns:
+    EMA, daily deltas, and days since first record.
+    """
+    df_original = load_data()
+
+    if df_original.empty:
+        print("No data found. Please record your first weight.")
+        return pd.DataFrame()
+
+    # Interpolate missing dates
+    df = df_original.set_index("Date")
+    all_days = pd.date_range(df.index.min(), df.index.max())
     df = df.reindex(all_days)
 
-    # Interpolate missing 'Weight' linearly
-    df['Weight'] = df['Weight'].interpolate(method='linear')
+    # Interpolate missing weights linearly
+    df["Weight"] = df["Weight"].interpolate(method="linear")
 
-    # Daily change from interpolated data
-    df['DailyDelta'] = df['Weight'].diff()
+    # Calculate daily change and EMAs
+    df["DailyDelta"] = df["Weight"].diff()
+    df["EMA7"] = df["Weight"].ewm(span=7, adjust=False).mean()
+    df["EMA30"] = df["Weight"].ewm(span=30, adjust=False).mean()
 
-    # EMA calculations on interpolated values
-    df['EMA7'] = df['Weight'].ewm(span=7, adjust=False).mean()
-    df['EMA30'] = df['Weight'].ewm(span=30, adjust=False).mean()
+    # Reset index and filter original dates only
+    df = df.reset_index().rename(columns={"index": "Date"})
+    df_final = df[df["Date"].isin(df_original["Date"])].copy()
 
-    # Reset index to make 'Date' a column again
-    df = df.reset_index().rename(columns={'index': 'Date'})
+    # Calculate days since first entry & weight delta
+    df_final["Days"] = (df_final["Date"] - df_final["Date"].iloc[0]).dt.days
+    df_final["Delta"] = df_final["Weight"].diff()
 
-    # Keep only original dates
-    df_final = df[df['Date'].isin(df_original['Date'])].copy()
+    return df_final[
+        ["Date", "Days", "Weight", "Delta", "DailyDelta", "EMA7", "EMA30"]
+    ]
 
-    # Days from first entry
-    df_final['Days'] = (df_final['Date'] - df_final['Date'].iloc[0]).dt.days
 
-    # Change from last original entry
-    df_final['Delta'] = df_final['Weight'].diff()
+def add_new_weight():
+    """Prompt user for a new weight and append it to CSV."""
+    try:
+        value = float(input("Enter new weight: ").strip())
+    except ValueError:
+        print("Invalid input. Please enter a numeric value.")
+        return
 
-    # Reorder columns as requested
-    df_final = df_final[['Date', 'Days', 'Weight', 'Delta', 'DailyDelta', 'EMA7', 'EMA30']]
+    new_entry = pd.DataFrame(
+        {"Date": [datetime.today().strftime("%Y-%m-%d")], "Weight": [value]}
+    )
+    new_entry.to_csv(FILE_PATH, mode="a", header=not os.path.exists(FILE_PATH), index=False)
+    print("Weight recorded successfully!")
+    show_records()
 
-    return df_final
 
-def record_new_weight():
-    value = float(input("Enter new weight:\t"))
-    new_row = pd.DataFrame({
-        'Date': [datetime.today().strftime('%Y-%m-%d')],
-        'Weight': [value]
-    })
+# ----------------- DISPLAY & PLOT -----------------
+def show_records():
+    """Display all processed weight records in a clean table."""
+    df = preprocess_data()
+    if df.empty:
+        return
 
-    # Append without reading entire CSV into memory
-    new_row.to_csv(FILE_PATH, mode='a', header=False, index=False)
-    print_records()
-
-def print_records():
-    df = read_data()
-    df_rounded = df.copy()
     with pd.option_context(
-        'display.max_rows', None,
-        'display.max_columns', None,
-        'display.width', 700,
-        'display.float_format', '{:.2f}'.format
+        "display.max_rows", None,
+        "display.max_columns", None,
+        "display.width", 700,
+        "display.float_format", "{:.2f}".format
     ):
-        print(df_rounded)
+        print(df)
+
 
 def plot_records():
-    df = read_data()
-    output_file="plot.png"
+    """Generate and save a weight trend plot with EMAs."""
+    df = preprocess_data()
+    if df.empty:
+        return
 
-    # Ensure Date column is datetime
-    df['Date'] = pd.to_datetime(df['Date'])
+    plt.figure(figsize=(12, 6), dpi=600)
+    plt.plot(df["Date"], df["Weight"], label="Weight", marker="o", color="royalblue")
+    plt.plot(df["Date"], df["EMA7"], label="EMA 7", linestyle="--", color="green")
+    plt.plot(df["Date"], df["EMA30"], label="EMA 30", linestyle="--", color="orange")
 
-    # Create figure
-    fig, ax1 = plt.subplots(figsize=(12, 6), dpi=300)
-
-    # Plot Weight and EMAs
-    ax1.plot(df['Date'], df['Weight'], label='Weight', marker='o')
-    ax1.plot(df['Date'], df['EMA7'], label='EMA7', linestyle='--')
-    ax1.plot(df['Date'], df['EMA30'], label='EMA30', linestyle='--')
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Weight / EMA')
-    ax1.legend(loc='upper left')
-    ax1.grid(True)
-
-    # Auto-format date labels
-    fig.autofmt_xdate()
-
-    # Save to file
+    plt.title("Weight Trend Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Weight")
+    plt.legend()
+    plt.grid(True)
     plt.tight_layout()
-    plt.savefig(output_file)
-    plt.close(fig)
+    plt.savefig(PLOT_PATH)
+    plt.close()
+    print(f"Plot saved as {PLOT_PATH}")
 
+
+# ----------------- MAIN MENU -----------------
 def main():
+    """Main menu for the weight tracking program."""
     while True:
-        print("Weight Tracker Menu:")
+        print("\n=== Weight Tracker Menu ===")
         print("1. Record new weight")
         print("2. Show all records")
         print("3. Plot records")
         print("0. Exit")
-        choice = input("Enter your choice:\t")
 
-        if choice=='1':
-            record_new_weight();
-        elif choice=='2':
-            print_records()
-        elif choice=='3':
+        choice = input("Enter your choice: ").strip()
+        if choice == "1":
+            add_new_weight()
+        elif choice == "2":
+            show_records()
+        elif choice == "3":
             plot_records()
+        elif choice == "0":
+            print("Exiting. Stay healthy!")
+            break
         else:
-            quit()
+            print("Invalid choice. Please try again.")
+
 
 if __name__ == "__main__":
     main()
