@@ -92,25 +92,77 @@ def show_records():
         print(df)
 
 
-def plot_records():
-    """Generate and save a weight trend plot with EMAs."""
+def plot_records(show=True):
+    """Generate and save a weight trend plot:
+    - Top: last 2 months (zoomed-in)
+    - Bottom: full timeline (overview)
+    """
     df = preprocess_data()
     if df.empty:
         return
 
-    plt.figure(figsize=(12, 6), dpi=600)
-    plt.plot(df["Date"], df["Weight"], label="Weight", marker="o", color="royalblue")
-    plt.plot(df["Date"], df["EMA7"], label="EMA 7", linestyle="--", color="green")
-    plt.plot(df["Date"], df["EMA30"], label="EMA 30", linestyle="--", color="orange")
+    # Ensure data sorted
+    df = df.sort_values("Date").reset_index(drop=True)
 
-    plt.title("Weight Trend Over Time")
-    plt.xlabel("Date")
-    plt.ylabel("Weight")
-    plt.legend()
-    plt.grid(True)
+    # Define time window for the last 60 days
+    last_60_days = df["Date"].max() - pd.Timedelta(days=60)
+    df_recent = df[df["Date"] >= last_60_days].copy()
+
+    # Setup figure with two subplots
+    fig, (ax_recent, ax_full) = plt.subplots(
+        2,
+        1,
+        figsize=(12, 8),
+        dpi=300,
+        sharey=True,
+        gridspec_kw={"height_ratios": [2, 1]},
+    )
+
+    # --- Recent trend (top, bigger) ---
+    ax_recent.plot(
+        df_recent["Date"],
+        df_recent["Weight"],
+        marker="o",
+        color="royalblue",
+        label="Weight",
+    )
+    ax_recent.plot(
+        df_recent["Date"],
+        df_recent["EMA7"],
+        linestyle="--",
+        color="green",
+        label="EMA 7",
+    )
+    ax_recent.plot(
+        df_recent["Date"],
+        df_recent["EMA30"],
+        linestyle="--",
+        color="orange",
+        label="EMA 30",
+    )
+    ax_recent.set_title("Recent Trend (Last 2 Months)", fontsize=14, fontweight="bold")
+    ax_recent.set_ylabel("Weight (kg)")
+    ax_recent.grid(True)
+    ax_recent.legend()
+
+    # --- Full trend (bottom, smaller) ---
+    ax_full.plot(
+        df["Date"], df["Weight"], marker=".", color="steelblue", label="Weight"
+    )
+    ax_full.plot(df["Date"], df["EMA7"], linestyle="--", color="green", label="EMA 7")
+    ax_full.plot(
+        df["Date"], df["EMA30"], linestyle="--", color="orange", label="EMA 30"
+    )
+    ax_full.set_title("Full Weight History", fontsize=12)
+    ax_full.set_xlabel("Date")
+    ax_full.set_ylabel("Weight (kg)")
+    ax_full.grid(True)
+    ax_full.legend()
+
     plt.tight_layout()
     plt.savefig(PLOT_PATH)
     plt.close()
+
     print(f"Plot saved as {PLOT_PATH}")
 
 
