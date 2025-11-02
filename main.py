@@ -51,9 +51,7 @@ def preprocess_data():
     df_final["Days"] = (df_final["Date"] - df_final["Date"].iloc[0]).dt.days
     df_final["Delta"] = df_final["Weight"].diff()
 
-    return df_final[
-        ["Date", "Days", "Weight", "Delta", "DailyDelta", "EMA7", "EMA30"]
-    ]
+    return df_final[["Date", "Days", "Weight", "Delta", "DailyDelta", "EMA7", "EMA30"]]
 
 
 def add_new_weight():
@@ -67,7 +65,9 @@ def add_new_weight():
     new_entry = pd.DataFrame(
         {"Date": [datetime.today().strftime("%Y-%m-%d")], "Weight": [value]}
     )
-    new_entry.to_csv(FILE_PATH, mode="a", header=not os.path.exists(FILE_PATH), index=False)
+    new_entry.to_csv(
+        FILE_PATH, mode="a", header=not os.path.exists(FILE_PATH), index=False
+    )
     print("Weight recorded successfully!")
     show_records()
 
@@ -80,10 +80,14 @@ def show_records():
         return
 
     with pd.option_context(
-        "display.max_rows", None,
-        "display.max_columns", None,
-        "display.width", 700,
-        "display.float_format", "{:.2f}".format
+        "display.max_rows",
+        None,
+        "display.max_columns",
+        None,
+        "display.width",
+        700,
+        "display.float_format",
+        "{:.2f}".format,
     ):
         print(df)
 
