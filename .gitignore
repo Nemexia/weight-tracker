@@ -42,3 +42,4 @@ bin
 graph.bmp
 .cache
 plot.png
+__pycache__
