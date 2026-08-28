@@ -1,8 +1,10 @@
 import core
+import plotter
 
 
 def main():
     """Main menu for the weight tracking program."""
+    df = core.preprocess_data()
     while True:
         print("\n=== Weight Tracker Menu ===")
         print("1. Record new weight")
@@ -12,11 +14,16 @@ def main():
 
         choice = input("Enter your choice: ").strip()
         if choice == "1":
-            core.add_new_weight()
+            try:
+                value = float(input("Enter new weight: ").strip())
+                core.add_new_weight(value)
+                df = core.preprocess_data()
+            except ValueError:
+                print("Invalid input. Please enter a numeric value.")
         elif choice == "2":
-            core.show_records()
+            core.show_records(df)
         elif choice == "3":
-            core.plot_records()
+            plotter.plot_records(df)
         elif choice == "0":
             print("Exiting. Stay healthy!")
             break
